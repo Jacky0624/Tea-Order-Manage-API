@@ -18,8 +18,6 @@ builder.Services.AddAuthorizationPolicies();
 // Add services to the container.
 builder.Services.AddTeaAPIServices();
 
-builder.Services.AddAuthorization();
-
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();

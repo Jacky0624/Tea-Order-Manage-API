@@ -51,13 +51,14 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
 builder.Services.AddCors(option =>
 {
     option.AddPolicy("CorsPolicy", policy =>
     {
         policy
-        .WithOrigins("http://localhost:4200") 
+        .WithOrigins(allowedOrigins)
         .AllowCredentials()
         .AllowAnyHeader()
         .AllowAnyMethod();

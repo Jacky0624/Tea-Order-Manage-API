@@ -36,3 +36,9 @@
   "http://localhost:4200"
 ]
 ```
+
+## **📌 這個版本的改進**
+✅ **詳細解釋 `AllowedOrigins` 設定**，確保前端可以正常請求 `TeaAPI`。  
+✅ **在 `Program.cs` 配置 `AddCors`**，讓 API 正確應用 CORS 設定。  
+✅ **允許多個前端環境**（`localhost:4200` & `正式站`）。  
+✅ **提供 CORS 測試方法**，幫助開發者快速檢查是否設定正確。  

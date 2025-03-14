@@ -25,8 +25,7 @@ namespace TeaAPI.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string createUser = userIdClaim ?? "System";
+                string createUser = GetUser();
                 var res = await _userService.CreateUserAsync(request.Username, request.Account, request.Password, request.RoleId, createUser);
                 return Ok(res);
             }
@@ -65,10 +64,17 @@ namespace TeaAPI.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string user = userIdClaim ?? "System";
+                string user = GetUser();
+                if(user == request.UserId.ToString())
+                {
+                    return Ok(new ResponseBase()
+                    {
+                        ResultCode = -1,
+                        Errors = new List<string>() { "can not delete self"}
+                    });
+                }
                 await _userService.DeleteUserAsync(request.UserId, user);
-                return Ok();
+                return Ok(new ResponseBase() { ResultCode = 0 });
             }
             catch (Exception ex)
             {
@@ -105,6 +111,12 @@ namespace TeaAPI.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        private string GetUser()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return userIdClaim ?? "System";
         }
     }
 }

@@ -21,7 +21,7 @@ namespace TeaAPI.Controllers
         }
 
         [HttpPost("CreateOrder")]
-        public async Task<IActionResult> CreateOrderAsync(CreateOrderRequest request)
+        public async Task<IActionResult> CreateOrderAsync(EditOrderRequest request)
         {
             try
             { 

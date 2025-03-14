@@ -6,26 +6,41 @@ using TeaAPI.Repositories.Orders.Interfaces;
 using TeaAPI.Services.Orders.Interfaces;
 using TeaAPI.Models.Requests.Orders;
 using TeaAPI.Services.Products.Interfaces;
+using FluentValidation;
 
 namespace TeaAPI.Services.Orders
 {
     public class OrderService : IOrderService
     {
+        private readonly IValidator<EditOrderRequest> _validator;
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderItemService _orderItemService;
         private readonly IProductService _productService;
         public OrderService( 
             IOrderRepository orderRepository,
             IOrderItemService orderItemService,
-            IProductService productService)
+            IProductService productService,
+            IValidator<EditOrderRequest> validator)
         {         
             _orderRepository = orderRepository;
             _orderItemService = orderItemService;
-            _productService = productService;   
+            _productService = productService;
+            _validator = validator;
         }
 
-        public async Task<ResponseBase> CreateAsync(CreateOrderRequest request, string user)
+        public async Task<ResponseBase> CreateAsync(EditOrderRequest request, string user)
         {
+            var validationResult = await _validator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                return new ResponseBase
+                {
+                    ResultCode = -6,
+                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                };
+            }
+
             var orderItems = new List<OrderItemDTO>();
             decimal totalAmount = 0;
             foreach (var item in request.Items)
@@ -45,7 +60,7 @@ namespace TeaAPI.Services.Orders
                 {
                     return new ResponseBase()
                     {
-                        ResultCode = -1,
+                        ResultCode = -2,
                         Errors = new List<string>() { "size error" }
                     };
                 }
@@ -58,7 +73,7 @@ namespace TeaAPI.Services.Orders
                     {
                         return new ResponseBase()
                         {
-                            ResultCode = -1,
+                            ResultCode = -3,
                             Errors = new List<string>() { "type error" }
                         };
                     }
@@ -67,7 +82,7 @@ namespace TeaAPI.Services.Orders
                     {
                         return new ResponseBase()
                         {
-                            ResultCode = -1,
+                            ResultCode = -4,
                             Errors = new List<string>() { "option error" }
                         };
                     }
@@ -75,7 +90,7 @@ namespace TeaAPI.Services.Orders
                     {
                         return new ResponseBase()
                         {
-                            ResultCode = -1,
+                            ResultCode = -5,
                             Errors = new List<string>() { "duplicate answer" }
                         };
                     }
@@ -294,6 +309,8 @@ namespace TeaAPI.Services.Orders
 
             return new ResponseBase { ResultCode = 0 };
         }
+
+     
 
     }
 }

@@ -6,7 +6,7 @@ namespace TeaAPI.Services.Orders.Interfaces
 {
     public interface IOrderService
     {
-        Task<ResponseBase> CreateAsync(CreateOrderRequest order, string user);
+        Task<ResponseBase> CreateAsync(EditOrderRequest order, string user);
         Task<IEnumerable<OrderDTO>> GetAllAsync();
         Task<OrderDTO> GetByIdAsync(int id);
         Task<ResponseBase> UpdateAsync(UpdateOrderRequest order, string user);

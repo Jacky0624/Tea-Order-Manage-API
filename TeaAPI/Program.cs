@@ -1,6 +1,8 @@
-﻿using TeaAPI.AutoMappers;
+﻿using FluentValidation;
+using TeaAPI.AutoMappers;
 using TeaAPI.Extensions;
 using TeaAPI.Middlewares;
+using TeaAPI.Validators.Orders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,7 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddAuthorizationPolicies();
 
+builder.Services.AddValidatorsFromAssemblyContaining<EditOrderValidator>();
 // Add services to the container.
 builder.Services.AddTeaAPIServices();
 

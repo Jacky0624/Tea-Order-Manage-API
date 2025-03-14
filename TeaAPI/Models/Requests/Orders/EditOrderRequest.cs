@@ -1,6 +1,6 @@
 ﻿namespace TeaAPI.Models.Requests.Orders
 {
-    public class CreateOrderRequest
+    public class EditOrderRequest
     {
         public string Phone { get; set; }
         public string Title { get; set; }
@@ -16,8 +16,9 @@
         public int Count { get; set; }
         public int SelectedSize { get; set; }
         public string Remark { get; set; }
-        public List<ItemOptionRequest> SelectedValues { get; set; }   
+        public List<ItemOptionRequest> SelectedValues { get; set; }
     }
+
     public class ItemOptionRequest
     {
         public int TypeId { get; set; }

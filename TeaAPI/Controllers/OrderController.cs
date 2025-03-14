@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TeaAPI.Dtos.Orders;
 using TeaAPI.Models.Requests.Orders;
 using TeaAPI.Models.Responses;
 using TeaAPI.Services.Orders.Interfaces;
@@ -25,9 +24,8 @@ namespace TeaAPI.Controllers
         public async Task<IActionResult> CreateOrderAsync(CreateOrderRequest request)
         {
             try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string user = userIdClaim ?? "System";
+            { 
+                string user = GetUser();
                 var res = await _orderService.CreateAsync(request, user);
                 return Ok(res); 
             }
@@ -46,8 +44,7 @@ namespace TeaAPI.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string user = userIdClaim ?? "System";
+                string user = GetUser();
                 var res = await _orderService.GetByIdAsync(request.Id);
                 return Ok(res);
             }
@@ -67,8 +64,7 @@ namespace TeaAPI.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string user = userIdClaim ?? "System";
+                string user = GetUser();
                 var res = await _orderService.GetAllAsync();
                 return Ok(res);
             }
@@ -88,8 +84,7 @@ namespace TeaAPI.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string user = userIdClaim ?? "System";
+                string user = GetUser();
                 var res = await _orderService.DeleteAsync(request.Id);
                 return Ok(res);
             }
@@ -108,8 +103,7 @@ namespace TeaAPI.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string user = userIdClaim ?? "System";
+                string user = GetUser();
                 var res = await _orderService.UpdateAsync(request, user);
                 return Ok(res);
             }
@@ -121,6 +115,12 @@ namespace TeaAPI.Controllers
                     Errors = new List<string> { ex.Message }
                 });
             }
+        }
+
+        private string GetUser()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return userIdClaim ?? "System";
         }
     }
 }

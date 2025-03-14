@@ -26,7 +26,6 @@
 }
 ```
 
-
 ## 4️⃣ 設定前端 Allow Origin（CORS）
 為了讓 `TeaAPI` 允許前端（如 Angular、React）訪問，請在 `appsettings.json` 中設定 **允許的來源 (`AllowedOrigins`)**。
 
@@ -37,8 +36,17 @@
 ]
 ```
 
-## **📌 這個版本的改進**
-✅ **詳細解釋 `AllowedOrigins` 設定**，確保前端可以正常請求 `TeaAPI`。  
-✅ **在 `Program.cs` 配置 `AddCors`**，讓 API 正確應用 CORS 設定。  
-✅ **允許多個前端環境**（`localhost:4200` & `正式站`）。  
-✅ **提供 CORS 測試方法**，幫助開發者快速檢查是否設定正確。  
+## 5️⃣ 啟動 API 並測試 Swagger 介面
+執行以下指令啟動 `TeaAPI`：
+```sh
+dotnet run
+```
+執行後，應該會自動開啟 **Swagger 介面** (`http://localhost:5000/swagger` 或 `http://localhost:5001/swagger`)，你可以使用 Swagger 測試 API。
+
+📌 **如果沒有自動開啟 Swagger，請手動在瀏覽器輸入以下網址**：
+```
+http://localhost:7197/swagger
+```
+
+🚀 **Swagger 提供視覺化的 API 測試工具，開發者可以直接在瀏覽器內測試所有 API！**
+![Swagger介面](assets/images/swagger.png)

@@ -25,14 +25,22 @@ namespace TeaAPI.Middlewares
             {
                 _logger.LogError($"Unexpected error: {ex}");
 
+                context.Response.ContentType = "application/json";
+
+                context.Response.StatusCode = ex switch
+                {
+                    KeyNotFoundException => StatusCodes.Status404NotFound,
+                    UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+                    ArgumentException => StatusCodes.Status400BadRequest, 
+                    InvalidOperationException => StatusCodes.Status400BadRequest, 
+                    _ => StatusCodes.Status500InternalServerError
+                };
                 var response = new ResponseBase
                 {
-                    ResultCode = (int)HttpStatusCode.InternalServerError,
+                    ResultCode = context.Response.StatusCode,
                     Errors = new List<string> { ex.Message }
                 };
 
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = response.ResultCode;
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
         }

@@ -46,7 +46,7 @@ namespace TeaAPI.Extensions
 
             services.AddMemoryCache();
             services.AddSingleton<IRefreshTokenCacheService, RefreshTokenMemoryCacheService>();
-
+            //services.Decorate<IProductService, CachedProductService>(); 
             return services;
         }
     }

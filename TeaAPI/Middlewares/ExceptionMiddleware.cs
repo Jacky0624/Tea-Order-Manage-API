@@ -29,10 +29,10 @@ namespace TeaAPI.Middlewares
 
                 context.Response.StatusCode = ex switch
                 {
-                    KeyNotFoundException => StatusCodes.Status404NotFound,
-                    UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
-                    ArgumentException => StatusCodes.Status400BadRequest, 
-                    InvalidOperationException => StatusCodes.Status400BadRequest, 
+                    _ when ex is KeyNotFoundException => StatusCodes.Status404NotFound,
+                    _ when ex is UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+                    _ when ex is ArgumentException => StatusCodes.Status400BadRequest,
+                    _ when ex is InvalidOperationException => StatusCodes.Status400BadRequest,
                     _ => StatusCodes.Status500InternalServerError
                 };
                 var response = new ResponseBase

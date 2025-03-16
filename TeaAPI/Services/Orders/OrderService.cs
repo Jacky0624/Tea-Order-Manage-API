@@ -7,6 +7,7 @@ using TeaAPI.Services.Orders.Interfaces;
 using TeaAPI.Models.Requests.Orders;
 using TeaAPI.Services.Products.Interfaces;
 using FluentValidation;
+using System.Transactions;
 
 namespace TeaAPI.Services.Orders
 {
@@ -31,93 +32,16 @@ namespace TeaAPI.Services.Orders
         public async Task<ResponseBase> CreateAsync(EditOrderRequest request, string user)
         {
             var validationResult = await _validator.ValidateAsync(request);
-
             if (!validationResult.IsValid)
             {
-                return new ResponseBase
-                {
-                    ResultCode = -6,
-                    Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
-                };
+                return GenerateErrorResponse(-6, validationResult.Errors.Select(e => e.ErrorMessage).ToList());
             }
 
-            var orderItems = new List<OrderItemDTO>();
-            decimal totalAmount = 0;
-            foreach (var item in request.Items)
+            var (orderItems, totalAmount, validationErrors) = await ProcessOrderItems(request.Items);
+            if (validationErrors.Any())
             {
-                decimal itemPrice = 0;
-                var product = await _productService.GetByIdAsync(item.ProductId);
-                if(product == null)
-                {
-                    return new ResponseBase()
-                    {
-                        ResultCode = -1,
-                        Errors = new List<string>() { $"product:{item.ProductId} not exist"}
-                    };
-                }
-                var size = product.ProductSizes.FirstOrDefault(x => x.Id == item.SelectedSize);
-                if(size == null)
-                {
-                    return new ResponseBase()
-                    {
-                        ResultCode = -2,
-                        Errors = new List<string>() { "size error" }
-                    };
-                }
-                itemPrice += size.Price;
-                var optionsDict = new Dictionary<int, OrderItemOptionDTO>();
-                foreach (var val in item.SelectedValues)
-                {
-                    var type = product.Options.FirstOrDefault(x => x.Id == val.TypeId);
-                    if(type == null)
-                    {
-                        return new ResponseBase()
-                        {
-                            ResultCode = -3,
-                            Errors = new List<string>() { "type error" }
-                        };
-                    }
-                    var option = type.VariantValues.FirstOrDefault(x => x.Id == val.ValueId);
-                    if(option == null)
-                    {
-                        return new ResponseBase()
-                        {
-                            ResultCode = -4,
-                            Errors = new List<string>() { "option error" }
-                        };
-                    }
-                    if(optionsDict.ContainsKey(type.Id))
-                    {
-                        return new ResponseBase()
-                        {
-                            ResultCode = -5,
-                            Errors = new List<string>() { "duplicate answer" }
-                        };
-                    }
-                    itemPrice += option.ExtraPrice;
-                    optionsDict[type.Id] = new OrderItemOptionDTO()
-                    {
-                        ExtraValue = option.ExtraPrice,
-                        VariantType = type.TypeName,
-                        VariantTypeId = type.Id,
-                        VariantValue = option.Value,
-                        VariantValueId  = option.Id
-                    };
-                }
-                orderItems.Add(new OrderItemDTO()
-                {
-                    Count = item.Count,
-                    ProductSizeName = size.Size,
-                    ProductSizeId = size.Id,
-                    Price = size.Price,
-                    ProductId = product.Id,
-                    Remark = item.Remark,
-                    ProductName = product.Name,
-                    Options = optionsDict.Values
-                });
-                totalAmount += itemPrice * item.Count;
+                return GenerateErrorResponse(-1, validationErrors);
             }
-           
 
             var newOrder = new OrderPO
             {
@@ -125,25 +49,31 @@ namespace TeaAPI.Services.Orders
                 Phone = request.Phone,
                 Title = request.Title,
                 Address = request.Address,
-                Remark = request.Remark,    
+                Remark = request.Remark,
                 OrderStatus = OrderStatusEnum.Pending,
                 OrderDate = request.OrderDate,
                 CreateUser = user,
                 ModifyUser = user,
-                CreateAt = DateTime.Now,
-                ModifyAt = DateTime.Now
+                CreateAt = DateTime.UtcNow,
+                ModifyAt = DateTime.UtcNow
             };
 
-            int orderId = await _orderRepository.CreateAsync(newOrder);
+            using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                int orderId = await _orderRepository.CreateAsync(newOrder);
+                if (orderId <= 0)
+                {
+                    return GenerateErrorResponse(-1, new List<string> { "create fail" });
+                }
 
-            if (orderId <= 0)
-            {
-                return new ResponseBase { ResultCode = -1, Errors = new List<string> { "create fail" } };
+                foreach (var item in orderItems)
+                {
+                    await _orderItemService.CreateAsync(orderId, item, user);
+                }
+
+                transaction.Complete();
             }
-            foreach (var item in orderItems)
-            {
-                await _orderItemService.CreateAsync(orderId, item, user);
-            }
+
             return new ResponseBase { ResultCode = 0 };
         }
 
@@ -152,14 +82,20 @@ namespace TeaAPI.Services.Orders
             var existingOrder = await _orderRepository.GetByIdAsync(id);
             if (existingOrder == null)
             {
-                return new ResponseBase { ResultCode = -1, Errors = new List<string> { "order not exist" } };
+                return GenerateErrorResponse(-1, new List<string> { "order not exist" });
             }
             if (existingOrder.OrderStatus == OrderStatusEnum.Canceled || existingOrder.OrderStatus == OrderStatusEnum.Completed)
             {
-                return new ResponseBase { ResultCode = -2, Errors = new List<string> { "order can not delete" } };
+                return GenerateErrorResponse(-2, new List<string> { "order cannot be deleted" });
             }
-            await _orderItemService.DeleteAsync(id);
-            await _orderRepository.DeleteAsync(id);
+
+            using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                await _orderItemService.DeleteAsync(id);
+                await _orderRepository.DeleteAsync(id);
+                transaction.Complete();
+            }
+
             return new ResponseBase { ResultCode = 0 };
         }
 
@@ -310,7 +246,84 @@ namespace TeaAPI.Services.Orders
             return new ResponseBase { ResultCode = 0 };
         }
 
-     
+        private async Task<(List<OrderItemDTO>, decimal, List<string>)> ProcessOrderItems(List<OrderItemRequest> items)
+        {
+            var orderItems = new List<OrderItemDTO>();
+            decimal totalAmount = 0;
+            var errors = new List<string>();
+
+            foreach (var item in items)
+            {
+                var (orderItem, itemTotalPrice, error) = await ValidateAndBuildOrderItem(item);
+                if (!string.IsNullOrEmpty(error))
+                {
+                    errors.Add(error);
+                    continue;
+                }
+
+                orderItems.Add(orderItem);
+                totalAmount += itemTotalPrice * item.Count;
+            }
+
+            return (orderItems, totalAmount, errors);
+        }
+
+        private async Task<(OrderItemDTO, decimal, string)> ValidateAndBuildOrderItem(OrderItemRequest item)
+        {
+            var product = await _productService.GetByIdAsync(item.ProductId);
+            if (product == null) return (null, 0, $"product:{item.ProductId} not exist");
+
+            var size = product.ProductSizes.FirstOrDefault(x => x.Id == item.SelectedSize);
+            if (size == null) return (null, 0, "size error");
+
+            decimal itemPrice = size.Price;
+            var optionsDict = new Dictionary<int, OrderItemOptionDTO>();
+
+            foreach (var val in item.SelectedValues)
+            {
+                var type = product.Options.FirstOrDefault(x => x.Id == val.TypeId);
+                if (type == null) return (null, 0, "type error");
+
+                var option = type.VariantValues.FirstOrDefault(x => x.Id == val.ValueId);
+                if (option == null) return (null, 0, "option error");
+
+                if (optionsDict.ContainsKey(type.Id))
+                    return (null, 0, "duplicate answer");
+
+                itemPrice += option.ExtraPrice;
+                optionsDict[type.Id] = new OrderItemOptionDTO
+                {
+                    ExtraValue = option.ExtraPrice,
+                    VariantType = type.TypeName,
+                    VariantTypeId = type.Id,
+                    VariantValue = option.Value,
+                    VariantValueId = option.Id
+                };
+            }
+
+            var orderItemDTO = new OrderItemDTO
+            {
+                Count = item.Count,
+                ProductSizeName = size.Size,
+                ProductSizeId = size.Id,
+                Price = size.Price,
+                ProductId = product.Id,
+                Remark = item.Remark,
+                ProductName = product.Name,
+                Options = optionsDict.Values
+            };
+
+            return (orderItemDTO, itemPrice, null);
+        }
+
+        private ResponseBase GenerateErrorResponse(int resultCode, List<string> errors)
+        {
+            return new ResponseBase
+            {
+                ResultCode = resultCode,
+                Errors = errors
+            };
+        }
 
     }
 }

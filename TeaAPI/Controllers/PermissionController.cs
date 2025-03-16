@@ -19,19 +19,8 @@ namespace TeaAPI.Controllers
         [HttpGet("GetAllPermissions")]
         public async Task<IActionResult> GetAllPermissionsAsync()
         {
-            try
-            {
-                var res = await _permissionService.GetAllPermissionsAsync();
-                return Ok(res);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            var res = await _permissionService.GetAllPermissionsAsync();
+            return Ok(res);
         }
     }
 }

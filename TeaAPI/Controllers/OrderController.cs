@@ -23,98 +23,43 @@ namespace TeaAPI.Controllers
         [HttpPost("CreateOrder")]
         public async Task<IActionResult> CreateOrderAsync(EditOrderRequest request)
         {
-            try
-            { 
-                string user = GetUser();
-                var res = await _orderService.CreateAsync(request, user);
-                return Ok(res); 
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            string user = GetUser();
+            var res = await _orderService.CreateAsync(request, user);
+            return Ok(res);
         }
         [AllowAnonymous]
         [HttpPost("GetOrderById")]
         public async Task<IActionResult> GetOrderByIdAsync(GetOrderRequest request)
         {
-            try
-            {
-                string user = GetUser();
-                var res = await _orderService.GetByIdAsync(request.Id);
-                return Ok(res);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            string user = GetUser();
+            var res = await _orderService.GetByIdAsync(request.Id);
+            return Ok(res);
         }
 
         [AllowAnonymous]
         [HttpGet("GetAllOrders")]
         public async Task<IActionResult> GetAllOrdersAsync()
         {
-            try
-            {
-                string user = GetUser();
-                var res = await _orderService.GetAllAsync();
-                return Ok(res);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            string user = GetUser();
+            var res = await _orderService.GetAllAsync();
+            return Ok(res);
         }
 
 
         [HttpPost("DeleteOrder")]
         public async Task<IActionResult> DeleteOrderAsync(DeleteOrderRequest request)
         {
-            try
-            {
-                string user = GetUser();
-                var res = await _orderService.DeleteAsync(request.Id);
-                return Ok(res);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            string user = GetUser();
+            var res = await _orderService.DeleteAsync(request.Id);
+            return Ok(res);
         }
 
         [HttpPost("UdateOrder")]
         public async Task<IActionResult> UdateOrderAsync(UpdateOrderRequest request)
         {
-            try
-            {
-                string user = GetUser();
-                var res = await _orderService.UpdateAsync(request, user);
-                return Ok(res);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            string user = GetUser();
+            var res = await _orderService.UpdateAsync(request, user);
+            return Ok(res);
         }
 
         private string GetUser()

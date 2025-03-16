@@ -21,20 +21,8 @@ namespace TeaAPI.Controllers
         [HttpGet("GetAllVariantTypes")]
         public async Task<IActionResult> GetAllVariantTypesWithValues()
         {
-            try
-            {
-                var variants = await _variantService.GetAllVariantTypesWithValueAsync();
-                return Ok(variants);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
-           
+            var variants = await _variantService.GetAllVariantTypesWithValueAsync();
+            return Ok(variants);
         }
     }
 }

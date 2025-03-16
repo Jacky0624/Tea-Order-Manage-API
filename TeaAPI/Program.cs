@@ -31,7 +31,7 @@ builder.Services.AddSwaggerDocumentation();
 var app = builder.Build();
 app.UseRateLimiter();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
-
+app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

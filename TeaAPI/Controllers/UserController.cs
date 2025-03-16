@@ -23,94 +23,49 @@ namespace TeaAPI.Controllers
         [HttpPost("CreateUser")]
         public async Task<IActionResult> CreateUserAsync(CreateUserRequest request)
         {
-            try
-            {
-                string createUser = GetUser();
-                var res = await _userService.CreateUserAsync(request.Username, request.Account, request.Password, request.RoleId, createUser);
-                return Ok(res);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            string createUser = GetUser();
+            var res = await _userService.CreateUserAsync(request.Username, request.Account, request.Password, request.RoleId, createUser);
+            return Ok(res);
         }
 
         [HttpPost("ModifyUser")]
         public async Task<IActionResult> ModifyUserAsync(ModifyUserRequest request)
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                string user = userIdClaim ?? "System";
-                var res = await _userService.ModifyUserAsync(request.Id, request.Username, request.RoleId, user);
-                return Ok(res);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string user = userIdClaim ?? "System";
+            var res = await _userService.ModifyUserAsync(request.Id, request.Username, request.RoleId, user);
+            return Ok(res);
         }
 
         [HttpPost("DeleteUser")]
         public async Task<IActionResult> DeleteUserAsync(DeleteUserRequest request)
         {
-            try
+            string user = GetUser();
+            if (user == request.UserId.ToString())
             {
-                string user = GetUser();
-                if(user == request.UserId.ToString())
+                return Ok(new ResponseBase()
                 {
-                    return Ok(new ResponseBase()
-                    {
-                        ResultCode = -1,
-                        Errors = new List<string>() { "can not delete self"}
-                    });
-                }
-                await _userService.DeleteUserAsync(request.UserId, user);
-                return Ok(new ResponseBase() { ResultCode = 0 });
+                    ResultCode = -1,
+                    Errors = new List<string>() { "can not delete self" }
+                });
             }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _userService.DeleteUserAsync(request.UserId, user);
+            return Ok(new ResponseBase() { ResultCode = 0 });
         }
 
         [HttpGet("GetAllUser")]
         public async Task<IActionResult> GetAllAsync()
         {
-            try
-            {
-                var users = await _userService.GetAllUsersAsync();
-               
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var users = await _userService.GetAllUsersAsync();
+            return Ok(users);
         }
 
-        [HttpPost("GetUserById")]  
+        [HttpPost("GetUserById")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetUserByIdAsync([FromBody]int userId)
+        public async Task<IActionResult> GetUserByIdAsync([FromBody] int userId)
         {
-            try
-            {
-                var users = await _userService.GetByIdAsync(userId);
-
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var users = await _userService.GetByIdAsync(userId);
+            return Ok(users);
         }
 
         private string GetUser()

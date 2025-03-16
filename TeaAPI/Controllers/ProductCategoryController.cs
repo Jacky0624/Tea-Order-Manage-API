@@ -22,35 +22,13 @@ namespace TeaAPI.Controllers
         [HttpGet("GetAllProductCategories")]
         public async Task<IActionResult> GetAllProductCategoriesAsync()
         {
-            try
-            {
-                return Ok(await _productCategoryService.GetAllAsync());
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            return Ok(await _productCategoryService.GetAllAsync());
         }
 
         [HttpPost("GetProductCategoryById")]
         public async Task<IActionResult> GetProductCategoryByIdAsync(GetProductCategoryRequest request)
         {
-            try
-            {
-                return Ok(await _productCategoryService.GetByIdAsync(request.Id));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseBase()
-                {
-                    ResultCode = -999,
-                    Errors = new List<string> { ex.Message }
-                });
-            }
+            return Ok(await _productCategoryService.GetByIdAsync(request.Id));  
         }
 
     }

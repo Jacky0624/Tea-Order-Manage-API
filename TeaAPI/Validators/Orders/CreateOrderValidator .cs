@@ -31,7 +31,7 @@ namespace TeaAPI.Validators.Orders
             {
                 return false;
             }
-            string pattern = @"^(09\d{8}|\+8869\d{8}|0\d{1,2}-\d{6,8})$";
+            string pattern = @"^(09\d{8}|\+886-?9\d{8}|0[2-8]\d{7,8}|0[3-9]\d{1,2}\d{6,8})$";
             return Regex.IsMatch(phoneNumber, pattern);
         }
     }

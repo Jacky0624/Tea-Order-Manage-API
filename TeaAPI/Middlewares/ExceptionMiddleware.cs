@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text.Json;
+﻿using System.Text.Json;
 using TeaAPI.Models.Responses;
 
 namespace TeaAPI.Middlewares

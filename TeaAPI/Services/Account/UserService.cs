@@ -146,6 +146,39 @@ namespace TeaAPI.Services.Account
                 PasswordHash = user.PasswordHash
             };
         }
+
+        public async Task<ResponseBase> ModifyPasswordAsync(int id, string originPassword, string newPassword, string modifyUser)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if(user == null) 
+            {
+                return new ResponseBase()
+                {
+                    ResultCode = -1,
+                    Errors = new List<string>() { "user not exist" }
+                };
+            }
+            if(originPassword == newPassword)
+            {
+                return new ResponseBase()
+                {
+                    ResultCode = -2,
+                    Errors = new List<string>() { "passwords are same" }
+                };
+            }
+            if(!_passwordService.VerifyPassword(originPassword, user.PasswordHash))
+            {
+                return new ResponseBase()
+                {
+                    ResultCode = -3,
+                    Errors = new List<string>() { "origin password error" }
+                };
+            }
+            user.PasswordHash = _passwordService.HashPassword(newPassword);         
+            user.ModifyUser = modifyUser;
+            await _userRepository.UpdateAsync(user);
+            return new ResponseBase();
+        }
     }
 
 }

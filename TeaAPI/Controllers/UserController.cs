@@ -68,6 +68,13 @@ namespace TeaAPI.Controllers
             return Ok(users);
         }
 
+        [HttpPost("ModifyPassword")]
+        public async Task<IActionResult> ModifyPasswordAsync(ModifyPasswordRequest request)
+        {
+            var user = GetUser();   
+            return Ok(await _userService.ModifyPasswordAsync(request.Id, request.OldPassword, request.NewPassword, user));
+        }
+
         private string GetUser()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

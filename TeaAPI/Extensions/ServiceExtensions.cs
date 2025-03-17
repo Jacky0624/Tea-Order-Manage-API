@@ -10,6 +10,7 @@ using TeaAPI.Services.Orders.Interfaces;
 using TeaAPI.Services.Orders;
 using TeaAPI.Services.Products.Interfaces;
 using TeaAPI.Services.Products;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace TeaAPI.Extensions
 {

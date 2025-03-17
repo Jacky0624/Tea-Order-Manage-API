@@ -58,7 +58,8 @@ namespace TeaAPI.Repositories.Accounts
                     user.Account,
                     user.RoleId,
                     ModifyAt = DateTime.Now,
-                    user.ModifyUser
+                    user.ModifyUser,
+                    user.PasswordHash
                 },
                 commandType: CommandType.StoredProcedure
             );

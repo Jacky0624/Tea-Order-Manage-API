@@ -11,5 +11,6 @@ namespace TeaAPI.Services.Account.Interfaces
         Task<IEnumerable<UserDTO>> GetAllUsersAsync();
         Task<UserDTO> GetByIdAsync(int id);
         Task<UserWithPasswordDTO> GetByAccountAsync(string account);
+        Task<ResponseBase> ModifyPasswordAsync(int id, string originPassword, string newPassword, string modifyUser);
     }
 }
